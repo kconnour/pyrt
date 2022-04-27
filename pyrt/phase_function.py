@@ -225,6 +225,62 @@ def decompose(phase_function: ArrayLike,
         raise ValueError(message) from lae
 
 
+def set_negative_coefficients_to_0(coefficients: ArrayLike) \
+        -> np.ndarray:
+    """Set an array of Legendre coefficients to 0 after the first coefficient
+    is negative.
+
+    .. warning:
+       There is a glitch where this zeroes everything if no coefficient is
+       negative
+
+    Parameters
+    ----------
+    coefficients: ArrayLike
+        N-dimensional array of Legendre coefficients. Axis 0 is assumed to be
+        the phase function decomposition dimension.
+
+    Returns
+    -------
+    np.ndarray
+        N-dimensional array of the zeroed coefficients with a shape of
+        ``coefficients.shape``.
+
+    Examples
+    --------
+    Decompose a 1-dimensional phase function.
+
+    >>> from pathlib import Path
+    >>> import numpy as np
+    >>> import pyrt
+    >>> dust_dir = Path(__file__).parent.parent / 'anc' / 'mars_dust'
+    >>> phsfn = np.load(dust_dir / 'phase_function.npy')[:, 0, 0]
+    >>> ang = np.load(dust_dir / 'scattering_angles.npy')
+    >>> coeff = pyrt.decompose(phsfn, ang, 129)[:12]
+    >>> coeff
+    array([ 1.00000000e+00,  1.77784574e-01,  5.09440222e-01,  3.52030055e-02,
+            1.62704765e-03,  6.26912942e-05,  8.40628501e-06, -6.12456095e-07,
+           -4.97888637e-06, -1.45066047e-06,  8.79039649e-06, -1.34314968e-06])
+
+    The eighth coefficient is negative. Set all coefficients after this value
+    ---both positive and negative---to 0.
+
+    >>> trimmed_coeff = pyrt.set_negative_coefficients_to_0(coeff)
+    >>> trimmed_coeff
+    array([1.00000000e+00, 1.77784574e-01, 5.09440222e-01, 3.52030055e-02,
+           1.62704765e-03, 6.26912942e-05, 8.40628501e-06, 0.00000000e+00,
+           0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00])
+
+    """
+    coeff = np.copy(_FiniteNumericArray(coefficients))
+    argmax = np.argmax(coeff < 0, axis=0)
+    c = np.indices(coeff.shape)[0, ...]
+    condition = c >= argmax
+
+    coeff[condition] = 0
+    return np.array(coeff)
+
+
 def fit_asymmetry_parameter(phase_function: ArrayLike,
                             scattering_angles: ArrayLike) \
         -> np.ndarray:
@@ -273,8 +329,9 @@ def fit_asymmetry_parameter(phase_function: ArrayLike,
     >>> g = 0.8
     >>> sa = np.linspace(0, 180, num=181)
     >>> pf = pyrt.construct_hg(g, sa) * 4 * np.pi
-    >>> pyrt.fit_asymmetry_parameter(pf, sa)
-    0.8347286993871823
+    >>> fit_g = pyrt.fit_asymmetry_parameter(pf, sa)
+    >>> round(fit_g, 5)
+    0.83473
 
     It's not completely terrible but not particularly inspiring. The error is
     due to the coarse resolution. Increasing the number of points in the
@@ -282,8 +339,9 @@ def fit_asymmetry_parameter(phase_function: ArrayLike,
 
     >>> sa = np.linspace(0, 180, num=18100)
     >>> pf = pyrt.construct_hg(g, sa) * 4 * np.pi
-    >>> pyrt.fit_asymmetry_parameter(pf, sa)
-    0.800337025881472
+    >>> fit_g = pyrt.fit_asymmetry_parameter(pf, sa)
+    >>> round(fit_g, 5)
+    0.80034
 
     """
     pf = _PhaseFunctionND(phase_function)
@@ -421,8 +479,8 @@ def decompose_hg(asymmetry_parameter: ArrayLike,
     >>> ang = np.linspace(0, 180, num=181)
     >>> pf = pyrt.construct_hg(g, ang) * 4 * np.pi  # normalize it
     >>> lc = pyrt.decompose(pf, ang, 129)
-    >>> np.amax(np.abs(lc - coeff))
-    2.778326172207967e-12
+    >>> round(np.amax(np.abs(lc - coeff)), 12)
+    3e-12
 
     """
     g = _AsymmetryParameter(asymmetry_parameter)

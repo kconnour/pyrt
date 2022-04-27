@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from pyrt import decompose, construct_hg, decompose_hg
+from pyrt import decompose, construct_hg, decompose_hg, fit_asymmetry_parameter
 
 
 class TestDecompose:
@@ -62,3 +62,18 @@ class TestDecomposeHG:
     def test_moment_0_is_1(self):
         g = np.linspace(-1, 1, num=101)
         assert np.all(decompose_hg(g, 129)[0] == 1)
+
+
+class TestFitAsymmetryParameter:
+    def test_negative_phase_function_raises_value_error(self):
+        pf = [-1, 1]
+        sa = [10, 20]
+        with pytest.raises(ValueError):
+            fit_asymmetry_parameter(pf, sa)
+
+    def test_hg_decomposition_gives_known_result(self):
+        g = 0.8
+        sa = np.linspace(0, 180, num=181000)
+        pf = construct_hg(g, sa) * 4 * np.pi
+        fit_g = fit_asymmetry_parameter(pf, sa)
+        assert np.isclose(g, fit_g, rtol=0.001)

@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from pyrt import decompose, construct_hg
+from pyrt import decompose, construct_hg, decompose_hg
 
 
 class TestDecompose:
@@ -48,3 +48,17 @@ class TestConstructHG:
     def test_shape_is_scattering_angles_then_g(self, g, sa):
         pf = construct_hg(g, sa)
         assert pf.shape == sa.shape + g.shape
+
+
+class TestDecomposeHG:
+    def test_g_greater_than_1_raises_value_error(self):
+        with pytest.raises(ValueError):
+            decompose_hg(np.nextafter(1, 2), 129)
+
+    def test_g_less_than_negative_1_raises_value_error(self):
+        with pytest.raises(ValueError):
+            decompose_hg(np.nextafter(-1, -2), 129)
+
+    def test_moment_0_is_1(self):
+        g = np.linspace(-1, 1, num=101)
+        assert np.all(decompose_hg(g, 129)[0] == 1)

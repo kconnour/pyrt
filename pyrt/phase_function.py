@@ -296,3 +296,62 @@ def construct_hg(asymmetry_parameter: ArrayLike,
     except ValueError as ve:
         message = 'The arrays must have the same shapes.'
         raise ValueError(message) from ve
+
+
+def decompose_hg(asymmetry_parameter: ArrayLike,
+                 n_moments: int) \
+        -> np.ndarray:
+    r"""Decompose Henyey-Greenstein phase functions into Legendre coefficients.
+
+    Parameters
+    ----------
+    asymmetry_parameter: ArrayLike
+        N-dimensional array of asymmetry parameters. All values must be between
+        -1 and 1.
+    n_moments: int
+        The number of moments to decompose the phase function into.
+
+    Returns
+    -------
+    np.ndarray
+        N-dimensional arrray of Legendre coefficients. This array has a shape
+        of ``(n_moments,) + asymmetry_parameter.shape``.
+
+    Notes
+    -----
+    The Henyey-Greenstein phase function can be decomposed as follows:
+
+    .. math::
+       p(\mu) = \sum_{n=0}^{\infty} (2n + 1)g^n P_n(\mu)
+
+    where :math:`p` is the phase function, :math:`\mu` is the cosine of the
+    scattering angle, :math:`n` is the moment number, :math:`g` is the
+    asymmetry parameter, and :math:`P_n(\mu)` is the :math:`n`:sup:`th`
+    Legendre polynomial.
+
+    Examples
+    --------
+    Decompose an asymmetry parameter into 129 moments.
+
+    >>> import numpy as np
+    >>> import pyrt
+    >>> g = 0.5
+    >>> coeff = pyrt.decompose_hg(g, 129)
+    >>> coeff.shape
+    (129,)
+
+    Construct a Henyey-Greenstein phase function, decompose it, and see how
+    this result compares to the analytic decomposition performed above.
+
+    >>> ang = np.linspace(0, 180, num=181)
+    >>> pf = pyrt.construct_hg(g, ang) * 4 * np.pi  # normalize it
+    >>> lc = pyrt.decompose(pf, ang, 129)
+    >>> np.amax(np.abs(lc - coeff))
+    2.778326172207967e-12
+
+    """
+    g = _AsymmetryParameter(asymmetry_parameter)
+    n_moments = _validate_moments(n_moments)
+    moments = np.linspace(0, n_moments-1, num=n_moments)
+    coeff = (2 * moments + 1) * np.power.outer(g, moments)
+    return np.array(np.moveaxis(coeff, -1, 0))

@@ -246,31 +246,6 @@ def set_negative_coefficients_to_0(coefficients: ArrayLike) \
         N-dimensional array of the zeroed coefficients with a shape of
         ``coefficients.shape``.
 
-    Examples
-    --------
-    Decompose a 1-dimensional phase function.
-
-    >>> from pathlib import Path
-    >>> import numpy as np
-    >>> import pyrt
-    >>> dust_dir = Path(__file__).parent.parent / 'anc' / 'mars_dust'
-    >>> phsfn = np.load(dust_dir / 'phase_function.npy')[:, 0, 0]
-    >>> ang = np.load(dust_dir / 'scattering_angles.npy')
-    >>> coeff = pyrt.decompose(phsfn, ang, 129)[:12]
-    >>> coeff
-    array([ 1.00000000e+00,  1.77784574e-01,  5.09440222e-01,  3.52030055e-02,
-            1.62704765e-03,  6.26912942e-05,  8.40628501e-06, -6.12456095e-07,
-           -4.97888637e-06, -1.45066047e-06,  8.79039649e-06, -1.34314968e-06])
-
-    The eighth coefficient is negative. Set all coefficients after this value
-    ---both positive and negative---to 0.
-
-    >>> trimmed_coeff = pyrt.set_negative_coefficients_to_0(coeff)
-    >>> trimmed_coeff
-    array([1.00000000e+00, 1.77784574e-01, 5.09440222e-01, 3.52030055e-02,
-           1.62704765e-03, 6.26912942e-05, 8.40628501e-06, 0.00000000e+00,
-           0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00])
-
     """
     coeff = np.copy(_FiniteNumericArray(coefficients))
     argmax = np.argmax(coeff < 0, axis=0)

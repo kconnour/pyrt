@@ -35,4 +35,3 @@ class TestColumn:
         col1 = Column(od, ssa1, pmom)
         col = col0 + col1
         assert col.single_scattering_albedo == 0.75
-        

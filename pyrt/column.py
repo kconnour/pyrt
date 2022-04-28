@@ -3,6 +3,23 @@ from numpy.typing import ArrayLike
 
 
 class Column:
+    """A data class to hold column information.
+
+    Its primary utility is adding columns via the `+` operator. 
+
+    Parameters
+    ----------
+    optical_depth: ArrayLike
+        N-dimensional array of optical depths.
+    single_scattering_albedo: ArrayLike
+        N-dimensional array of single-scattering albedos. Must be the same
+        shape as `optical_depth`.
+    legendre_coefficients: ArrayLike
+        N-dimensional array of Legendre coefficients. Axis 0 can have any
+        length but the remaining axes must have the same shape as
+        `optical_depth`.
+
+    """
     def __init__(self, optical_depth: ArrayLike, single_scattering_albedo: ArrayLike, legendre_coefficients: ArrayLike):
         self.optical_depth = optical_depth
         self.single_scattering_albedo = single_scattering_albedo

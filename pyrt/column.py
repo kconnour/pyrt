@@ -17,7 +17,7 @@ class Column:
     legendre_coefficients: ArrayLike
         N-dimensional array of Legendre coefficients. Axis 0 can have any
         length but the remaining axes must have the same shape as
-        `optical_depth`.
+        `optical_depth`. These get divided by 2k + 1.
 
     """
     def __init__(self, optical_depth: ArrayLike, single_scattering_albedo: ArrayLike, legendre_coefficients: ArrayLike):
@@ -89,6 +89,9 @@ class Column:
 
     @property
     def legendre_coefficients(self):
+        # Divide each moment by 2k + 1 when accessing the array
+        #weight = np.linspace(0, self._pmom.shape[0]-1, num=self._pmom.shape[0]) * 2 + 1
+        #return (self._pmom.T / weight).T
         return self._pmom
 
     @legendre_coefficients.setter
